@@ -30,6 +30,12 @@ namespace dolfin
     GenericTensor* A;
     std::shared_ptr<TensorLayout> tensor_layout;
 
+    // std::size_t rank;
+    std::vector<std::size_t> global_dim_vec;
+    std::vector<std::pair<std::size_t, std::size_t> > local_range_vec;
+    std::vector<const std::vector<int>* > off_process_owner;
+
+
     BroadcastAssembler();
 
     void init_global_tensor(GenericTensor &newA, 
@@ -41,8 +47,9 @@ namespace dolfin
     void sparsity_form(const Form &a,
 		       const GenericDofMap & dofmaps);
     void sparsity_cell_pair(const Form &a,
-			    const GenericDofMap & mdofA,
-			    const GenericDofMap & mdofB,
+			    const Mesh & meshA, const GenericDofMap & mdofA,
+			    const Mesh & meshB, const GenericDofMap & mdofB,
+					    
 			    const Array<int>& pairs);
     void sparsity_apply();
 

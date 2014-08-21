@@ -58,6 +58,9 @@ def test():
     # form_to_global = np.array(range(V.dim()),dtype=np.intc)
     assem.sparsity_form(Fa,mdof.part(0))
     assem.sparsity_form(Fa2,mdof.part(1))
+    print "yo"
+    assem.sparsity_cell_pair(Fa,me,mdof.part(0),me2,mdof.part(1),np.array([1,1,2,2],dtype=np.intc))
+    print "dog"
     assem.sparsity_apply()
     assem.assemble_form(Fa,mdof.part(0))
     assem.assemble_form(Fa2,mdof.part(1))

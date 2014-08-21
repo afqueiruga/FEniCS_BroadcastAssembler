@@ -44,12 +44,11 @@ void BroadcastAssembler::init_global_tensor(
     )
 {
   A = &newA;
-  std::vector<std::size_t> global_dim_vec;
-  std::vector<std::pair<std::size_t, std::size_t> > local_range_vec;
-
+  // std::vector<std::size_t> global_dim_vec;
+  // std::vector<std::pair<std::size_t, std::size_t> > local_range_vec;
   std::vector<const std::vector<std::size_t>* > local_to_global(rank);
   std::vector<std::vector<std::size_t> > tmp_local_to_global(rank);
-  std::vector<const std::vector<int>* > off_process_owner;
+  // std::vector<const std::vector<int>* > off_process_owner;
   for(int i=0; i<global_dim.size(); i++) {
     global_dim_vec.push_back( global_dim[i] );
     local_range_vec.push_back(std::pair<std::size_t, std::size_t>(local_range[2*i],local_range[2*i+1]));
@@ -109,12 +108,59 @@ void BroadcastAssembler::sparsity_form(const Form &a,
 }
 
 void BroadcastAssembler::sparsity_cell_pair(const Form &a,
-					    const GenericDofMap & mdofA,
-					    const GenericDofMap & mdofB,
+					    const Mesh & meshA, const GenericDofMap & mdofA,
+					    const Mesh & meshB, const GenericDofMap & mdofB,
 					    const Array<int>& pairs)
 {
-  
+
+  GenericSparsityPattern& pattern = * tensor_layout->sparsity_pattern();
+
+  const std::size_t rank = a.rank();
+
+  std::cout << "Inserting " << pairs.size()/2 << " pair entries \n";
+  std::cout << "rank: " << rank << "\n";
+  std::cout << "globdim: " << global_dim_vec[0] << ", " << global_dim_vec[1] << "\n";
+
+  // Create vector to point to dofs
+  std::vector<std::vector<dolfin::la_index>* > dofs(rank);
+  std::vector<const std::vector<dolfin::la_index>* > dofsconst(rank);
+  for(std::size_t i=0; i<rank; ++i)
+    {
+      dofs[i] = new std::vector<dolfin::la_index>();
+      dofsconst[i] = (const std::vector<dolfin::la_index>* )dofs[i];
+    }
+
+
+  const std::vector<unsigned int>& cellsA = meshA.cells();
+  const std::vector<unsigned int>& cellsB = meshB.cells();
+  std::cout << meshA.cells().size() << " vs. " << meshA.num_cells() << "\n";
+  std::cout << meshB.cells().size() << " vs. " << meshB.num_cells() << "\n";
+
+  for( int p=0; p<pairs.size(); p+= 2) {
+    int ca = pairs[p];
+    int cb = pairs[p+1];
+    std::cout << pairs[p] << ", " << pairs[p+1] << "\n";
+    for (std::size_t i = 0; i < rank; ++i)
+      {
+	const std::vector<dolfin::la_index>* first;
+	const std::vector<dolfin::la_index>* second;
+
+        first  = &mdofA[i]->cell_dofs(ca);
+	second = &mdofB[i]->cell_dofs(cb);
+
+	dofs[i]->clear();
+	dofs[i]->insert(dofs[i]->end(),first->begin(),first->end());
+	dofs[i]->insert(dofs[i]->end(),second->begin(),second->end());
+	for( int d = 0; d < dofs[i]->size() ; ++d) {
+	  std::cout << (*dofs[i])[d] << ", ";
+	}
+	std::cout << "\n";
+      }
+    tensor_layout->sparsity_pattern()->insert(dofsconst);
+    
+  }
 }
+
 void BroadcastAssembler::sparsity_apply()
 {
   GenericSparsityPattern& pattern = * tensor_layout->sparsity_pattern();
