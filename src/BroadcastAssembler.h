@@ -56,8 +56,8 @@ namespace dolfin
     void assemble_form(const Form &a,
 		       const GenericDofMap & mappeddof);
     void assemble_cell_pair(const Form &a,
-			    const GenericDofMap & mdofA,
-			    const GenericDofMap & mdofB,
+			    const Mesh & meshA, const GenericDofMap & mdofA,
+			    const Mesh & meshB, const GenericDofMap & mdofB,
 			    const Array<int>& pairs);
 
 

@@ -64,6 +64,7 @@ def test():
     assem.sparsity_apply()
     assem.assemble_form(Fa,mdof.part(0))
     assem.assemble_form(Fa2,mdof.part(1))
+    assem.assemble_cell_pair(Fa,me,mdof.part(0),me2,mdof.part(1),np.array([1,1,2,2],dtype=np.intc))
     A.apply('add')
     embed()
     
