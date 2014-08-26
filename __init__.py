@@ -9,7 +9,7 @@ header_file = open(srcdir+"/BroadcastAssembler.h", "r")
 code = header_file.read()
 header_file.close()
 compiled_module = compile_extension_module(
-    code=code, source_directory=srcdir, sources=["BroadcastAssembler.cpp","BroadcastDofMap.cpp"],
+    code=code, source_directory=srcdir, sources=["BroadcastAssembler.cpp"],
     include_dirs=[".",os.path.abspath(srcdir)],
     additional_declarations="""
 %feature("notabstract") BroadcastAssembler;
@@ -55,16 +55,16 @@ def test():
     assem.init_global_tensor(A,dim,2,0,local_dofs,mdof.off_process_owner())
 
     # assem.init_global_tensor(A,N,2,MPI_Comm(),local_dofs)
-    # form_to_global = np.array(range(V.dim()),dtype=np.intc)
+    
     assem.sparsity_form(Fa,mdof.part(0))
     assem.sparsity_form(Fa2,mdof.part(1))
-    print "yo"
     assem.sparsity_cell_pair(Fa,me,mdof.part(0),me2,mdof.part(1),np.array([1,1,2,2],dtype=np.intc))
-    print "dog"
     assem.sparsity_apply()
+    
     assem.assemble_form(Fa,mdof.part(0))
     assem.assemble_form(Fa2,mdof.part(1))
     assem.assemble_cell_pair(Fa,me,mdof.part(0),me2,mdof.part(1),np.array([1,1,2,2],dtype=np.intc))
+
     A.apply('add')
     embed()
     
@@ -85,6 +85,7 @@ def test():
     # plt.spy(A.array())
     # plt.show()
     # embed()
-    
+
+
 if __name__=="__main__":
     test()

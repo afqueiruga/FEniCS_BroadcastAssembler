@@ -26,7 +26,7 @@
 #include "dolfin/fem/UFC.h"
 
 #include "BroadcastAssembler.h"
-#include "BroadcastDofMap.h"
+// #include "BroadcastDofMap.h"
 
 using namespace dolfin;
 
@@ -72,7 +72,7 @@ void BroadcastAssembler::init_global_tensor(
     if(A->rank() != rank) {
       dolfin_error("BroadcastAssembler.cpp",
 		   "init_global_tensor",
-		   "A does not rank");
+		   "A does not match in rank");
     }
     for(int i=0; i<rank; i++) {
       if(A->size(i) != global_dim[i]) {
@@ -211,13 +211,12 @@ void BroadcastAssembler::assemble_form(const Form &a,
 void BroadcastAssembler::assemble_cell_pair(const Form &a,
 					    const Mesh & meshA, const GenericDofMap & mdofA,
 					    const Mesh & meshB, const GenericDofMap & mdofB,
-			    const Array<int>& pairs)
+					    const Array<int>& pairs)
 {
 
   GenericSparsityPattern& pattern = * tensor_layout->sparsity_pattern();
 
   const std::size_t rank = a.rank();
-
   std::cout << "Inserting " << pairs.size()/2 << " pair entries \n";
   std::cout << "rank: " << rank << "\n";
   std::cout << "globdim: " << global_dim_vec[0] << ", " << global_dim_vec[1] << "\n";
@@ -248,9 +247,42 @@ void BroadcastAssembler::assemble_cell_pair(const Form &a,
   }
 
 
+  // Initialize variables that will be reused throughout assembly
+  ufc::cell ufc_cell[2];
+  std::vector<double> vertex_coordinates[2];
+  std::vector<double> macro_vertex_coordinates;
+  // Make the ufc data
+  UFC ufc_data(a);
+
+
+  // if(!cell_integral) return;
+
+  // Iterate over the pairs
   for( int p=0; p<pairs.size(); p+= 2) {
     int ca = pairs[p];
     int cb = pairs[p+1];
+    const Cell cellA(meshA, ca);
+    const Cell cellB(meshB, ca);
+
+    // Update the ufc data to the current cell
+    cellA.get_cell_data(ufc_cell[0], 0);
+    cellB.get_cell_data(ufc_cell[1], 0);
+    cellA.get_vertex_coordinates(vertex_coordinates[0]);
+    cellB.get_vertex_coordinates(vertex_coordinates[1]);
+    ufc_data.update(cellA, vertex_coordinates[0], ufc_cell[0],
+		    cellB, vertex_coordinates[1], ufc_cell[1]);
+
+    // Collect vertex coordinates
+    macro_vertex_coordinates.resize(vertex_coordinates[0].size() +
+				    vertex_coordinates[0].size());
+    std::copy(vertex_coordinates[0].begin(),
+	      vertex_coordinates[0].end(),
+	      macro_vertex_coordinates.begin());
+    std::copy(vertex_coordinates[1].begin(),
+	      vertex_coordinates[1].end(),
+	      macro_vertex_coordinates.begin() + vertex_coordinates[0].size());
+
+    // Tabulate the DOFs of both cells in one vector
     std::cout << pairs[p] << ", " << pairs[p+1] << "\n";
     for (std::size_t i = 0; i < rank; ++i)
       {
@@ -268,14 +300,14 @@ void BroadcastAssembler::assemble_cell_pair(const Form &a,
 	}
 	std::cout << "\n";
       }
+
+    // Tabulate cell tensor
+    
+
+    // Add to matrix
     A->add(&AE[0], dofsconst);  
 
   }
-
-
-
-
-
 }
 
 //-----------------------------------------------------------------------------
