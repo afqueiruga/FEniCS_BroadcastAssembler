@@ -57,8 +57,11 @@ namespace dolfin
 		       const GenericDofMap & mappeddof);
     void assemble_cell_pair(const Form &a,
 			    const Mesh & meshA, const GenericDofMap & mdofA,
+			    const Form &b,
 			    const Mesh & meshB, const GenericDofMap & mdofB,
-			    const Array<int>& pairs);
+			    const Array<int>& pairs,
+			    const Array<double>& chi,
+			    const int chi_n);
 
 
     void add_to_global_tensor(GenericTensor& A,
