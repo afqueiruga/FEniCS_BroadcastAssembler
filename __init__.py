@@ -18,6 +18,7 @@ compiled_module = compile_extension_module(
 """
 )
 
+BroadcastAssembler = compiled_moduled.BroadcastAssembler()
 
 
 def test():
