@@ -328,7 +328,7 @@ void BroadcastAssembler::assemble_cell_pair(const Form &a,
     num_q_points = chi_n_max;
     q_points = &(chi[0]) + (p/2)*chi_n_max;
     double q_points_ready[6*chi_n_max];
-    printf("max : %d\n",chi_n_max);
+    // printf("max : %d\n",chi_n_max);
     for (std::size_t i = 0 ; i < chi_n_max ; i++ ) {
       for(std::size_t j = 0 ; j < 3 ; j++ ) {
 	q_points_ready[3*i+j] = q_points[6*i+j];
