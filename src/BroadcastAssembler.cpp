@@ -326,7 +326,7 @@ void BroadcastAssembler::assemble_cell_pair(const Form &a,
 
     // Select the quadrature points for this pair
     num_q_points = chi_n_max;
-    q_points = &(chi[0]) + (p/2)*chi_n_max;
+    q_points = &(chi[0]) + 6*(p/2)*chi_n_max;
     double q_points_ready[6*chi_n_max];
     // printf("max : %d\n",chi_n_max);
     for (std::size_t i = 0 ; i < chi_n_max ; i++ ) {
@@ -369,6 +369,16 @@ void BroadcastAssembler::assemble_cell_pair(const Form &a,
 				     q_weights,
 				     0,
 				     cell_orientation);
+
+    // ufc_data.dbg_print_macro_W();
+    // for( int d = 0; d < 5; d++ ) {
+    //   for( int l = 0; l < 12; l++ ) {
+    // 	std::cout << ufc_data.macro_w()[d][l] << ", ";
+    //   }
+    // std::cout << "\n";
+
+    // }
+    // std::cout << "\n";
     // for( int m = 0; m < dofs[0]->size() ; ++m) {
       // for( int n = 0; n < dofs[0]->size() ; ++n) {
       // 	std::cout << ufc_data.macro_A.data()[n] << ", ";
