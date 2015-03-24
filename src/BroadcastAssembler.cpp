@@ -233,27 +233,27 @@ void BroadcastAssembler::assemble_exterior_facets(const Form &a,
   std::vector<const GenericDofMap*> dofmaps;
   for (std::size_t i = 0; i < form_rank; ++i)
     dofmaps.push_back(&mappeddof);
-
+ printf("what's good. what's real good.\n");
   // Check whether integral is domain-dependent
   bool use_domains = domains && !domains->empty();
 
-
+ printf("what's good. what's real good.\n");
   // Compute facets and facet - cell connectivity if not already computed
   const std::size_t D = mesh.topology().dim();
   mesh.init(D - 1);
   mesh.init(D - 1, D);
   dolfin_assert(mesh.ordered());
-
+ printf("what's good. what's real good.\n");
   // Assemble over exterior facets (the cells of the boundary)
   ufc::cell ufc_cell;
   std::vector<double> vertex_coordinates;
   UFC ufc_data(a);
 
-
+ printf("what's good. what's real good.\n");
   // Exterior facet integral
   const ufc::exterior_facet_integral* integral = ufc_data.default_exterior_facet_integral.get();
 
-
+ printf("what's good. what's real good.\n");
   for (FacetIterator facet(mesh); !facet.end(); ++facet)
   {
     // Only consider exterior facets
@@ -268,6 +268,34 @@ void BroadcastAssembler::assemble_exterior_facets(const Form &a,
     // Skip integral if zero
     if (!integral)
       continue;
+
+
+    // Get mesh cell to which mesh facet belongs (pick first, there is only one)
+    dolfin_assert(facet->num_entities(D) == 1);
+    Cell mesh_cell(mesh, facet->entities(D)[0]);
+
+    // Get local index of facet with respect to the cell
+    const std::size_t local_facet = mesh_cell.index(*facet);
+
+    // Update UFC cell
+    mesh_cell.get_cell_data(ufc_cell, local_facet);
+    mesh_cell.get_vertex_coordinates(vertex_coordinates);
+
+    // Update UFC object
+    ufc_data.update(mesh_cell, vertex_coordinates, ufc_cell,
+               integral->enabled_coefficients());
+    // Get local-to-global dof maps for cell
+    for (std::size_t i = 0; i < form_rank; ++i)
+      dofsconst[i] = &(dofmaps[i]->cell_dofs(mesh_cell.index()));
+
+// Tabulate exterior facet tensor
+    integral->tabulate_tensor(ufc_data.A.data(),
+                              ufc_data.w(),
+                              vertex_coordinates.data(),
+                              local_facet,
+                              ufc_cell.orientation);
+
+    printf("what's good. what's real good.\n");
 
     add_to_global_tensor(*A, ufc_data.A, dofsconst);
   }
