@@ -233,27 +233,22 @@ void BroadcastAssembler::assemble_exterior_facets(const Form &a,
   std::vector<const GenericDofMap*> dofmaps;
   for (std::size_t i = 0; i < form_rank; ++i)
     dofmaps.push_back(&mappeddof);
- printf("what's good. what's real good.\n");
   // Check whether integral is domain-dependent
   bool use_domains = domains && !domains->empty();
 
- printf("what's good. what's real good.\n");
   // Compute facets and facet - cell connectivity if not already computed
   const std::size_t D = mesh.topology().dim();
   mesh.init(D - 1);
   mesh.init(D - 1, D);
   dolfin_assert(mesh.ordered());
- printf("what's good. what's real good.\n");
   // Assemble over exterior facets (the cells of the boundary)
   ufc::cell ufc_cell;
   std::vector<double> vertex_coordinates;
   UFC ufc_data(a);
 
- printf("what's good. what's real good.\n");
   // Exterior facet integral
   const ufc::exterior_facet_integral* integral = ufc_data.default_exterior_facet_integral.get();
 
- printf("what's good. what's real good.\n");
   for (FacetIterator facet(mesh); !facet.end(); ++facet)
   {
     // Only consider exterior facets
@@ -288,14 +283,12 @@ void BroadcastAssembler::assemble_exterior_facets(const Form &a,
     for (std::size_t i = 0; i < form_rank; ++i)
       dofsconst[i] = &(dofmaps[i]->cell_dofs(mesh_cell.index()));
 
-// Tabulate exterior facet tensor
+    // Tabulate exterior facet tensor
     integral->tabulate_tensor(ufc_data.A.data(),
                               ufc_data.w(),
                               vertex_coordinates.data(),
                               local_facet,
                               ufc_cell.orientation);
-
-    printf("what's good. what's real good.\n");
 
     add_to_global_tensor(*A, ufc_data.A, dofsconst);
   }
@@ -362,16 +355,16 @@ void BroadcastAssembler::assemble_cell_pair(const Form &a,
   // FIXME: I'm assuming it's the zeroth because I don't know any better.
   ufc::custom_integral * custom_integral = ufc_data.get_custom_integral(0);
   if(!custom_integral) {
-    printf("Error... No custom integral in slot 0\n");
+    // printf("Error... No custom integral in slot 0\n");
     custom_integral = ufc_data.get_custom_integral(1);
     if(!custom_integral) {
-      printf("Error... No custom integral in slot 1\n");
+      // printf("Error... No custom integral in slot 1\n");
       return;
     } else {
-      printf("Found integral in slot 1\n");
+      // printf("Found integral in slot 1\n");
     }
   } else {
-    printf("Found integral in slot 0\n");
+    // printf("Found integral in slot 0\n");
   }
 
   // Iterate over the pairs
