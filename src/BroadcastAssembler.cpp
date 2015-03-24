@@ -15,6 +15,7 @@
 #include <dolfin/common/MPI.h>
 #include <dolfin/mesh/Mesh.h>
 #include <dolfin/mesh/Cell.h>
+#include <dolfin/mesh/Facet.h>
 
 #include "dolfin/fem/FiniteElement.h"
 #include "dolfin/fem/Form.h"
@@ -216,6 +217,60 @@ void BroadcastAssembler::assemble_form(const Form &a,
 				ufc_cell.orientation);
       add_to_global_tensor(*A, ufc_data.A, dofsconst);
     }
+}
+
+void BroadcastAssembler::assemble_exterior_facets(const Form &a,
+						  const GenericDofMap & mappeddof,
+						  std::shared_ptr<const MeshFunction<std::size_t> > domains)
+{
+  const Mesh& mesh = a.mesh();
+  const std::size_t form_rank = a.rank();
+
+  std::vector<std::vector<dolfin::la_index>* > dofs(form_rank);
+  std::vector<const std::vector<dolfin::la_index>* > dofsconst(form_rank);
+
+  // Collect pointers to dof maps
+  std::vector<const GenericDofMap*> dofmaps;
+  for (std::size_t i = 0; i < form_rank; ++i)
+    dofmaps.push_back(&mappeddof);
+
+  // Check whether integral is domain-dependent
+  bool use_domains = domains && !domains->empty();
+
+
+  // Compute facets and facet - cell connectivity if not already computed
+  const std::size_t D = mesh.topology().dim();
+  mesh.init(D - 1);
+  mesh.init(D - 1, D);
+  dolfin_assert(mesh.ordered());
+
+  // Assemble over exterior facets (the cells of the boundary)
+  ufc::cell ufc_cell;
+  std::vector<double> vertex_coordinates;
+  UFC ufc_data(a);
+
+
+  // Exterior facet integral
+  const ufc::exterior_facet_integral* integral = ufc_data.default_exterior_facet_integral.get();
+
+
+  for (FacetIterator facet(mesh); !facet.end(); ++facet)
+  {
+    // Only consider exterior facets
+    if (!facet->exterior())
+    {
+      continue;
+    }
+    // Get integral for sub domain (if any)
+    if (use_domains)
+      integral = ufc_data.get_exterior_facet_integral((*domains)[*facet]);
+
+    // Skip integral if zero
+    if (!integral)
+      continue;
+
+    add_to_global_tensor(*A, ufc_data.A, dofsconst);
+  }
 }
 
 void BroadcastAssembler::assemble_cell_pair(const Form &a,

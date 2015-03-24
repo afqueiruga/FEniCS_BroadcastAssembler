@@ -55,6 +55,9 @@ namespace dolfin
 
     void assemble_form(const Form &a,
 		       const GenericDofMap & mappeddof);
+    void assemble_exterior_facets(const Form &a,
+				  const GenericDofMap & mappeddof,
+				  std::shared_ptr<const MeshFunction<std::size_t> > domains);
     void assemble_cell_pair(const Form &a,
 			    const Mesh & meshA, const GenericDofMap & mdofA,
 			    const Form &b,
